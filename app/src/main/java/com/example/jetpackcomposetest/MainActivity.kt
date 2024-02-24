@@ -1,5 +1,6 @@
 package com.example.jetpackcomposetest
 
+import android.graphics.drawable.Icon
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,14 +19,33 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import com.example.jetpackcomposetest.model.Interval
 import com.example.jetpackcomposetest.model.Task
 import com.example.jetpackcomposetest.ui.theme.JetpackComposeTestTheme
+import kotlinx.coroutines.launch
 import org.apache.commons.lang3.time.DurationFormatUtils
 import java.time.Duration
 import java.time.Instant
@@ -44,31 +65,100 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val tasks =
+                remember { mutableStateListOf<Task>() }
             JetpackComposeTestTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
+                val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                val scope = rememberCoroutineScope()
+                ModalNavigationDrawer(
+                    drawerState = drawerState,
+                    drawerContent = {
+                        ModalDrawerSheet {
+                            Text(
+                                "JetpackComposeText",
+                                style = MaterialTheme.typography.headlineMedium,
+                                modifier = Modifier.padding(16.dp),
+                            )
+                            Divider()
+                            NavigationDrawerItem(
+                                label = { Text("Settings") },
+                                selected = false,
+                                onClick = { /*TODO*/ },
+                                icon = { Icon(imageVector = Icons.Filled.Settings, contentDescription = "Settings") },
+                            )
+                            NavigationDrawerItem(
+                                label = { Text("About") },
+                                selected = false,
+                                onClick = { /*TODO*/ },
+                                icon = { Icon(imageVector = Icons.Filled.Info, contentDescription = "About") },
+                            )
+                        }
+                    },
                 ) {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        for (i in (1..50)) {
-                            val task =
-                                Task(
-                                    "Task $i",
-                                    "Unscheduled",
-                                    Interval(
-                                        Instant.parse("2024-02-24T14:00:00.00Z"),
-                                        Instant.parse("2024-02-24T18:00:00.00Z"),
+                    Scaffold(
+                        topBar = {
+                            CenterAlignedTopAppBar(
+                                colors =
+                                    topAppBarColors(
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        titleContentColor = MaterialTheme.colorScheme.primary,
                                     ),
-                                    Duration.ofHours(2),
-                                    1000.0,
+                                title = { Text("JetpackComposeTest") },
+                                navigationIcon =
+                                    {
+                                        IconButton(onClick = {
+                                            scope.launch {
+                                                drawerState.apply {
+                                                    if (isOpen) {
+                                                        close()
+                                                    } else {
+                                                        open()
+                                                    }
+                                                }
+                                            }
+                                        }) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Menu,
+                                                contentDescription = "Navigation Menu",
+                                            )
+                                        }
+                                    },
+                            )
+                        },
+                        floatingActionButton = {
+                            FloatingActionButton(onClick = {
+                                tasks.add(
+                                    Task(
+                                        "My Task ${tasks.count()}",
+                                        "Unscheduled",
+                                        Interval(
+                                            Instant.parse("2024-02-24T14:00:00.00Z"),
+                                            Instant.parse("2024-02-24T18:00:00.00Z"),
+                                        ),
+                                        Duration.ofHours(2),
+                                        1000.0,
+                                    ),
                                 )
-
-                            item {
-                                TaskCard(task, Modifier.fillMaxWidth())
+                            }) {
+                                Icon(imageVector = Icons.Filled.Add, contentDescription = "Add Task")
+                            }
+                        },
+                    ) { innerPadding ->
+                        LazyColumn(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                                    .padding(all = 8.dp),
+                        ) {
+                            for (task in tasks) {
+                                item {
+                                    TaskCard(task, Modifier.fillMaxWidth())
+                                }
                             }
                         }
                     }
@@ -118,7 +208,7 @@ fun TaskCard(
         modifier =
             modifier
                 .animateContentSize()
-                .padding(top = 8.dp),
+                .padding(top = 4.dp, bottom = 4.dp),
     ) {
         var isExpanded by remember { mutableStateOf(false) }
         Row(
@@ -137,6 +227,7 @@ fun TaskCard(
                         Modifier
                             .weight(1f, fill = false)
                             .aspectRatio(painter.intrinsicSize.width / painter.intrinsicSize.height)
+                            .padding(all = 4.dp)
                             .fillMaxSize(),
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary),
                 )
@@ -183,6 +274,7 @@ fun TaskCard(
                         Modifier
                             .weight(1f, fill = false)
                             .aspectRatio(painter.intrinsicSize.width / painter.intrinsicSize.height)
+                            .padding(all = 4.dp)
                             .fillMaxSize()
                             .clip(CircleShape)
                             .clickable { isExpanded = !isExpanded },
