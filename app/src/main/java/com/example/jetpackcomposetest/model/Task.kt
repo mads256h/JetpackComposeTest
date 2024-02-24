@@ -6,6 +6,7 @@ import java.time.Instant
 
 class Task(
     val name: String,
+    val status: String,
     val interval: Interval,
     val duration: Duration,
     val effect: Double,
