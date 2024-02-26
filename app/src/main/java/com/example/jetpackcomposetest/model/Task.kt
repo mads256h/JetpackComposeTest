@@ -5,6 +5,7 @@ import java.time.Duration
 import java.time.Instant
 
 class Task(
+    val id: Int,
     val name: String,
     val status: String,
     val interval: Interval,

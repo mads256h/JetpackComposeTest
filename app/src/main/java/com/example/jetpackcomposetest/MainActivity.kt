@@ -133,6 +133,7 @@ class MainActivity : ComponentActivity() {
                             FloatingActionButton(onClick = {
                                 tasks.add(
                                     Task(
+                                        tasks.count(),
                                         "My Task ${tasks.count()}",
                                         "Unscheduled",
                                         Interval(
@@ -155,11 +156,13 @@ class MainActivity : ComponentActivity() {
                                     .padding(innerPadding)
                                     .padding(all = 8.dp),
                         ) {
-                            for (task in tasks) {
-                                item {
-                                    TaskCard(task, Modifier.fillMaxWidth())
-                                }
-                            }
+                            items(
+                                count = tasks.count(),
+                                key = { tasks[it].id },
+                                itemContent = {
+                                    TaskCard(tasks[it], Modifier.fillMaxWidth())
+                                },
+                            )
                         }
                     }
                 }
@@ -305,6 +308,7 @@ fun TaskCardPreview() {
     JetpackComposeTestTheme {
         TaskCard(
             Task(
+                0,
                 "Test Task",
                 "Unscheduled",
                 Interval(Instant.parse("2024-02-24T14:00:00.00Z"), Instant.parse("2024-02-24T18:00:00.00Z")),
